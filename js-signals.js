@@ -1,7 +1,7 @@
 /**
  * Define a signal with initial value
  */
-function signal(initialValue) {
+export function signal(initialValue) {
    let value = initialValue;
    const subscribers = new Set();
 
@@ -13,13 +13,15 @@ function signal(initialValue) {
 
    const write = (newValue) => {
       value = typeof newValue === "function" ? newValue(value) : newValue;
-      subscribers.forEach(fn => fn(value));
+      subscribers.forEach(fn => {
+         fn();
+      });
    };
 
-   const subscribe = (fn) => {
-      subscribers.add(fn);
+   const subscribe = (fn, options = {}) => {
+      subscribers.add(debounce(fn, options.debounce ?? 0));
       fn(value);
-      return () => subscribers.delete(fn);
+      return () => subscribers.delete(opts);
    };
 
    return [read, write, subscribe];
@@ -28,7 +30,7 @@ function signal(initialValue) {
 /**
  * Create a computed value
  */
-function computed(fn, dependencies) {
+export function computed(fn, dependencies) {
    const [read, write] = signal(fn());
 
    dependencies.forEach(([, , subscribe]) => {
@@ -36,4 +38,19 @@ function computed(fn, dependencies) {
    });
 
    return read;
+}
+
+function debounce(fn, delay) {
+   let id = null;
+
+   return function() {
+      let args = arguments;
+      let self = this;
+
+      clearTimeout(id);
+
+      id = setTimeout(function() {
+         fn.apply(self, args);
+      }, delay);
+   };
 }

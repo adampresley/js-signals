@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   subscribeCount(() => {
     document.querySelector("#count").innerText = renderCount.value;
-  });
+  }, { debounce: 200 });
 
   document.querySelector("#clicker").addEventListener("click", () => {
     setCount(v => v + 1);
