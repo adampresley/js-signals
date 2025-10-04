@@ -5,12 +5,21 @@ export function signal(initialValue) {
    let value = initialValue;
    const subscribers = new Set();
 
+   /**
+    * Reader function to get the current value of the signal.
+    * @returns {Object} - An object with a getter for the current value of the signal.
+    */
    const read = {
       get value() {
          return value;
       }
    };
 
+   /**
+    * Writer function to update the value of the signal.
+    * @param {Function|*} newValue - The new value for the signal. If newValue is a function, it will be called with the current value of the signal.
+    * @returns {void} 
+    */
    const write = (newValue) => {
       value = typeof newValue === "function" ? newValue(value) : newValue;
       subscribers.forEach(fn => {
@@ -18,9 +27,15 @@ export function signal(initialValue) {
       });
    };
 
+   /**
+    * Subscribe to changes to the signal and execute the provided function when the signal changes.
+    * Returns a function that can be used to unsubscribe from the signal.
+    * @param {Function} fn - The function to execute when the signal changes
+    * @param {Object} options - Optional configuration object
+    * @returns {Function} - A function that can be used to unsubscribe from the signal
+    */
    const subscribe = (fn, options = {}) => {
       subscribers.add(debounce(fn, options.debounce ?? 0));
-      fn(value);
       return () => subscribers.delete(opts);
    };
 
