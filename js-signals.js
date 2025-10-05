@@ -18,12 +18,17 @@ export function signal(initialValue) {
    /**
     * Writer function to update the value of the signal.
     * @param {Function|*} newValue - The new value for the signal. If newValue is a function, it will be called with the current value of the signal.
+    * @param {Object} options - Optional configuration object
     * @returns {void} 
     */
-   const write = (newValue) => {
+   const write = (newValue, options = {}) => {
+      const opts = {
+         noDebounce: options.noDebounce ?? false,
+      };
+
       value = typeof newValue === "function" ? newValue(value) : newValue;
-      subscribers.forEach(fn => {
-         fn();
+      subscribers.forEach(s => {
+         opts.noDebounce ? s.originalFn(value) : s.debouncedFn(value);
       });
    };
 
@@ -35,7 +40,12 @@ export function signal(initialValue) {
     * @returns {Function} - A function that can be used to unsubscribe from the signal
     */
    const subscribe = (fn, options = {}) => {
-      subscribers.add(debounce(fn, options.debounce ?? 0));
+      const sub = {
+         originalFn: fn,
+         debouncedFn: debounce(fn, options.debounce ?? 0)
+      };
+
+      subscribers.add(sub);
       return () => subscribers.delete(opts);
    };
 
